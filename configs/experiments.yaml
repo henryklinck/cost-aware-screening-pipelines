@@ -1,0 +1,31 @@
+# Phase 2/3 experiment configuration -- PLACEHOLDER (not used in Phase 1).
+#
+# When the real-data layer is implemented, this file will define per-target datasets,
+# endpoints, splits, model adapters and budgets, e.g.:
+#
+# dataset: bindingdb_2026_09
+# endpoint: pKd
+# hit_threshold_pKd: 7.0        # justified biologically, chosen BEFORE the test set
+# split: temporal               # temporal | scaffold | compound | target-holdout
+# targets: [target_1, target_2, target_3, target_4, target_5]
+# models:
+#   - {name: rdkit_filter, kind: property_filter}
+#   - {name: fingerprint, kind: morgan_similarity}
+#   - {name: gnina, kind: gnina, version: "<commit>", cnn: rescore}
+#   - {name: boltz2, kind: boltz2, score: affinity_probability_binary}
+#
+# See src/screening/data.py and src/screening/models/{gnina,boltz2}.py docstrings.
+#
+# STATUS: the Phase-2 real-data layer is implemented and runnable via
+#   experiments/real_data/run_real_data.py (CLI args, not this file):
+#     - BindingDB preprocessing (data.py), leakage-aware splits (splits.py),
+#     - runnable cheap models (RDKit filter, fingerprint similarity),
+#     - the analysis modules (analysis.py).
+#   GNINA and Boltz-2 are honest, availability-gated adapters (they require external
+#   installs + GPU and are skipped when absent -- never fabricated).
+phase: 2
+implemented: partial   # cheap models + preprocessing + splits + analysis runnable;
+                       # GNINA/Boltz-2 require external tools not present here.
+endpoint: pKd
+hit_threshold_pKd: 7.0   # ~ Kd <= 100 nM; choose a priori, never tuned on the test set
+split: scaffold          # compound | scaffold | temporal | target

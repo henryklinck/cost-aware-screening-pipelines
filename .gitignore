@@ -1,0 +1,55 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# ---------------------------------------------------------------
+# Data and model weights are NEVER committed (see spec sections 3, 9).
+# Only small provenance/manifest files and .gitkeep placeholders are.
+# ---------------------------------------------------------------
+data/raw/*
+data/processed/*
+data/splits/*
+!data/**/.gitkeep
+!data/**/*.md
+
+*.h5
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.sdf
+*.mol2
+*.pdbqt
+*.tsv.gz
+
+# ---------------------------------------------------------------
+# Results: keep the directory tree and manifests, ignore heavy
+# generated artifacts. Figures/tables from a fresh run are
+# reproducible from configs + seed, so they stay out of git.
+# ---------------------------------------------------------------
+results/**/*.png
+results/**/*.pdf
+results/**/*.svg
+results/**/*.csv
+results/**/*.parquet
+results/**/*.json
+!results/**/.gitkeep
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
