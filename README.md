@@ -11,19 +11,26 @@ computational cost  <-->  hit recovery
 The project is built in three phases (spec):
 
 ```
-Phase 1  Synthetic simulation      (implemented — this repo)
-   |     develop & validate the methodology
+Phase 1  Synthetic simulation           develop & validate the methodology
    v
-Phase 2  Real models + public data  (scaffolded, not implemented)
-   |     GNINA, Boltz-2, RDKit filters on BindingDB
+Phase 2  Real models + public data       BindingDB + RDKit/fingerprint (+ GNINA/Boltz-2)
    v
-Phase 3  Prospective wet-lab validation (only if Phase 2 justifies it)
+Phase 3  Prospective wet-lab validation  only if Phase 2 justifies it (design only)
 ```
 
-> **Status: Phase 1 only.** GNINA, Boltz-2, and BindingDB are deliberately *not*
-> implemented — they exist as interface-conformant stubs so the pipeline/optimization
-> code can be reused unchanged in Phase 2. Nothing in this repo fabricates real-model
-> performance, costs, or benchmark numbers; every result is produced by the simulation.
+### Status by phase
+
+| Phase | State | Notes |
+|---|---|---|
+| **1 — synthetic** | ✅ implemented & runnable | full methodology; produces the cost/recall Pareto result |
+| **2 — real data** | ✅ runnable (cheap models) | BindingDB preprocessing, leakage-aware splits, RDKit + fingerprint baselines, and correlation/subgroup/bootstrap analysis all run through the **unchanged** Phase-1 framework |
+| **2 — GNINA / Boltz-2** | ⚙️ honest adapters | interface-conformant, provenance-recording, **availability-gated**: they require external installs + GPU and *refuse* rather than fabricate when absent |
+| **3 — prospective** | 📄 design + freeze utility | `PROTOCOL.md` + tamper-evident candidate freezing; no wet-lab work is performed |
+
+> **Nothing in this repo fabricates real-model performance, costs, or benchmark numbers.**
+> Phase-1 numbers come from the simulation; Phase-2 numbers come from real preprocessing +
+> runnable models on data you supply; GNINA/Boltz-2 produce numbers only on a properly
+> configured machine, and otherwise raise a clear error (spec §31).
 
 ---
 
@@ -69,19 +76,25 @@ src/screening/
   models/
     base.py          ScreeningModel interface: predict() + estimate_cost() (§16)
     simulated.py     SimulatedModel + correlated-error construction (§5)
-    gnina.py         Phase-2 stub (§12)
-    boltz2.py        Phase-2 stub (§13)
+    cheap.py         RDKitPropertyFilter + FingerprintSimilarity, runnable (§14)
+    external.py      shared availability-gating + provenance for external tools
+    gnina.py         GNINA docking adapter, availability-gated (§12)
+    boltz2.py        Boltz-2 affinity adapter, availability-gated (§13)
   pipelines.py       run_pipeline: staged thresholding & cost accrual (§6)
   metrics.py         recall/precision/enrichment/cost-per-hit; model quality (§20,§23)
   optimization.py    enumerate pipelines, grid-search thresholds, Pareto (§7,§19,§20)
-  data.py            Phase-2 BindingDB stub (§9-11)
-  utils.py           reproducibility manifest, timing (§29)
-experiments/simulation/
-  run_simulation.py  end-to-end driver
-  plots.py           Figures 1-5 (§8)
-configs/             simulation.yaml (Phase 1), experiments.yaml (Phase 2 placeholder)
+  chem.py            RDKit layer: standardize/scaffold/descriptors/fingerprints (§9,11,14)
+  data.py            BindingDB preprocessing + CompoundLibrary (§9-10)
+  splits.py          compound / scaffold / temporal / target splits + verifier (§11)
+  analysis.py        error correlation / subgroup error / grouped bootstrap (§22,23,26)
+  utils.py           reproducibility manifest, timing, selection freezing (§27,§29)
+experiments/
+  simulation/        run_simulation.py + plots.py — Figures 1-5 (§8)
+  real_data/         run_real_data.py — Phase-2 driver on BindingDB (§18-26)
+  prospective/       PROTOCOL.md + freeze_candidates.py (§27-28, design only)
+configs/             simulation.yaml, experiments.yaml
+tests/               80 unit tests incl. leakage checks (§30); fixtures/ tiny TSV sample
 results/             generated tables & figures (git-ignored)
-tests/               unit tests (§30)
 ```
 
 The **model interface** is the key to phase portability. Everything downstream depends
@@ -110,6 +123,38 @@ pytest                       # run the test suite
 python experiments/simulation/run_simulation.py --config configs/simulation.yaml
 # add --skip-sweeps to skip Figures 4 & 5 (faster)
 ```
+
+### Phase 2 — real data
+
+```bash
+pip install -e ".[phase2]"   # adds RDKit
+
+# Demo on the bundled tiny fixture (plumbing only — random SA data, NOT a result):
+python experiments/real_data/run_real_data.py --split scaffold
+
+# Real run: download the BindingDB TSV yourself (record its version/date), then:
+python experiments/real_data/run_real_data.py \
+    --data path/to/BindingDB_All.tsv --measurement-type Kd \
+    --hit-threshold 7.0 --split scaffold
+```
+
+This preprocesses to a single endpoint (e.g. pKd), builds leakage-safe splits, runs the
+RDKit + fingerprint models through the same pipeline/optimization code, and reports
+per-target recall with cross-target bootstrap CIs and model-error correlations. To add
+GNINA/Boltz-2, install those tools and wire their receptor/sequence inputs — the adapters
+already conform to the interface and record provenance.
+
+### Phase 3 — prospective (design only)
+
+```bash
+# Freeze a tamper-evident candidate selection (models+pipeline+thresholds+SHA-256):
+python experiments/prospective/freeze_candidates.py \
+    --pipeline rdkit_filter fingerprint --thresholds 0.5 0.2 \
+    --out results/prospective/selection_A.json
+```
+
+See [`experiments/prospective/PROTOCOL.md`](experiments/prospective/PROTOCOL.md) for the
+full design (comparison arms, outcomes). No wet-lab work is done by this repo.
 
 Outputs (all under `results/`, reproducible from config + seed):
 

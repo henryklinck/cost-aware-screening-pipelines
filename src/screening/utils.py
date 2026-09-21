@@ -86,6 +86,44 @@ class ExperimentRecord:
         return path
 
 
+def freeze_selection(
+    candidates: list,
+    pipeline: list,
+    thresholds: list,
+    config: Dict[str, Any],
+    path: Path,
+    extra: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Write a tamper-evident *frozen* candidate selection for a prospective run (§27).
+
+    Before any prospective (wet-lab) experiment, the models, pipeline, thresholds and the
+    exact candidate list must be frozen so the test is genuinely prospective and cannot
+    be silently changed after seeing outcomes (spec sections 27-28).  This records all of
+    that plus the git commit and a content hash of the candidate list.
+
+    Returns the frozen record (also written to ``path`` as JSON).
+    """
+    import hashlib
+
+    canonical = "\n".join(map(str, candidates)).encode("utf-8")
+    record = {
+        "frozen_utc": datetime.now(timezone.utc).isoformat(),
+        "git_commit": git_commit(),
+        "git_dirty": git_is_dirty(),
+        "pipeline": list(pipeline),
+        "thresholds": list(thresholds),
+        "config": config,
+        "n_candidates": len(candidates),
+        "candidates": list(candidates),
+        "candidates_sha256": hashlib.sha256(canonical).hexdigest(),
+        **(extra or {}),
+    }
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(record, indent=2, default=str))
+    return record
+
+
 class Timer:
     """Context manager measuring wall-clock seconds.
 
