@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "screening"
+version = "0.1.0"
+description = "Cost-aware optimal molecular screening pipelines (Phase 1: synthetic simulation)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "Henry Klinck" }]
+keywords = ["molecular-screening", "virtual-screening", "pareto", "pipelines", "cheminformatics"]
+
+# Phase 1 depends ONLY on lightweight scientific-Python packages.
+# Real-model dependencies (rdkit, gnina, boltz) are deliberately NOT
+# listed here; they belong to Phase 2 optional extras.
+dependencies = [
+    "numpy>=1.23",
+    "pandas>=1.5",
+    "scipy>=1.9",
+    "matplotlib>=3.6",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+# Phase 2 (not implemented yet) will add: rdkit, plus adapters that shell
+# out to external GNINA / Boltz-2 installations.
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

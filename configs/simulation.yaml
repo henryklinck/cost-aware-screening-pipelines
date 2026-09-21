@@ -1,0 +1,40 @@
+# Phase 1 synthetic simulation configuration.
+# Every field here is recorded in the experiment manifest for reproducibility.
+
+experiment_id: sim_default
+seed: 42
+
+library:
+  n_molecules: 100000      # library size (spec uses 1e6 illustratively; configurable)
+  mu: 0.0                  # mean of latent true affinity  y ~ N(mu, sigma)
+  sigma: 1.0               # spread of latent true affinity
+  sigma_assay: 0.30        # experimental measurement noise std (y_obs = y_true + eps)
+  prevalence: 0.01         # target hit prevalence; hit threshold set at this quantile
+  hits_on: true            # define hits on latent true affinity ("true") vs "obs"
+
+# Simulated models (spec section 5): smaller noise_std = more accurate, and cost rises
+# steeply with accuracy. Left null to use screening.models.default_model_specs().
+models: null
+
+# Error correlation across models (spec sections 5, 22). Scalar => equicorrelation.
+model_error_correlation: 0.3
+
+search:
+  min_stages: 1
+  max_stages: 3
+  retention_grid: [0.01, 0.02, 0.05, 0.10, 0.20, 0.30, 0.50]
+
+analysis:
+  # Experimental testing budget: max molecules in the final shortlist (spec sections
+  # 6, 20). Fraction of the library. This is what makes recall-vs-cost meaningful.
+  test_budget_fraction: 0.01
+  # Compute budgets for the recall-at-budget table, as fractions of the cost of the
+  # most expensive single-model strategy run on the whole library (spec section 20).
+  compute_budget_fractions: [0.01, 0.05, 0.10, 0.25, 0.50, 1.0]
+
+# Sweeps for Figures 4 (prevalence) and 5 (error correlation). Smaller library keeps
+# the multi-condition sweeps fast; results are qualitative.
+sweeps:
+  n_molecules: 50000
+  prevalence_values: [0.005, 0.01, 0.02, 0.05]
+  correlation_values: [0.0, 0.3, 0.6, 0.9]

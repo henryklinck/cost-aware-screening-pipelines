@@ -1,0 +1,19 @@
+# Phase 2/3 experiment configuration -- PLACEHOLDER (not used in Phase 1).
+#
+# When the real-data layer is implemented, this file will define per-target datasets,
+# endpoints, splits, model adapters and budgets, e.g.:
+#
+# dataset: bindingdb_2026_09
+# endpoint: pKd
+# hit_threshold_pKd: 7.0        # justified biologically, chosen BEFORE the test set
+# split: temporal               # temporal | scaffold | compound | target-holdout
+# targets: [target_1, target_2, target_3, target_4, target_5]
+# models:
+#   - {name: rdkit_filter, kind: property_filter}
+#   - {name: fingerprint, kind: morgan_similarity}
+#   - {name: gnina, kind: gnina, version: "<commit>", cnn: rescore}
+#   - {name: boltz2, kind: boltz2, score: affinity_probability_binary}
+#
+# See src/screening/data.py and src/screening/models/{gnina,boltz2}.py docstrings.
+phase: 2
+implemented: false
